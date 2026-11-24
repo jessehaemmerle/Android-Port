@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AUTOMATISCH ERZEUGT von scripts/gen_strip_manifest.py (lineage-24.0). Nicht von Hand aendern. -->
+<manifest>
+  <remove-project name="LineageOS/android_external_bash" path="external/bash" />
+  <remove-project name="LineageOS/android_external_htop" path="external/htop" />
+  <remove-project name="LineageOS/android_external_libncurses" path="external/libncurses" />
+  <remove-project name="LineageOS/android_external_nano" path="external/nano" />
+  <remove-project name="LineageOS/android_external_openssh" path="external/openssh" />
+  <remove-project name="LineageOS/android_external_rsync" path="external/rsync" />
+  <remove-project name="LineageOS/android_external_unrar" path="external/unrar" />
+  <remove-project name="LineageOS/android_external_vim" path="external/vim" />
+  <remove-project name="LineageOS/android_packages_apps_AudioFX" path="packages/apps/AudioFX" />
+  <remove-project name="platform/packages/apps/AvatarPicker" path="packages/apps/AvatarPicker" />
+  <remove-project name="LineageOS/android_packages_apps_Backgrounds" path="packages/apps/Backgrounds" />
+  <remove-project name="platform/packages/apps/Browser2" path="packages/apps/Browser2" />
+  <remove-project name="LineageOS/android_packages_apps_Camelot" path="packages/apps/Camelot" />
+  <remove-project name="platform/packages/apps/Camera2" path="packages/apps/Camera2" />
+  <remove-project name="LineageOS/android_packages_apps_Canvas" path="packages/apps/Canvas" />
+  <remove-project name="LineageOS/android_packages_apps_Catapult" path="packages/apps/Catapult" />
+  <remove-project name="LineageOS/android_packages_apps_DeskClock" path="packages/apps/DeskClock" />
+  <remove-project name="LineageOS/android_packages_apps_Etar" path="packages/apps/Etar" />
+  <remove-project name="LineageOS/android_packages_apps_ExactCalculator" path="packages/apps/ExactCalculator" />
+  <remove-project name="platform/packages/apps/EyeDropper" path="packages/apps/EyeDropper" />
+  <remove-project name="LineageOS/android_packages_apps_FMRadio" path="packages/apps/FMRadio" />
+  <remove-project name="LineageOS/android_packages_apps_FlipFlap" path="packages/apps/FlipFlap" />
+  <remove-project name="LineageOS/android_packages_apps_Gallery2" path="packages/apps/Gallery2" />
+  <remove-project name="LineageOS/android_packages_apps_Jelly" path="packages/apps/Jelly" />
+  <remove-project name="platform/packages/apps/Login" path="packages/apps/Login" />
+  <remove-project name="platform/packages/apps/Multiuser" path="packages/apps/Multiuser" />
+  <remove-project name="platform/packages/apps/Music" path="packages/apps/Music" />
+  <remove-project name="platform/packages/apps/MusicFX" path="packages/apps/MusicFX" />
+  <remove-project name="platform/packages/apps/OnDeviceAppPrediction" path="packages/apps/OnDeviceAppPrediction" />
+  <remove-project name="platform/packages/apps/PersonalContext" path="packages/apps/PersonalContext" />
+  <remove-project name="platform/packages/apps/PrivateSpace" path="packages/apps/PrivateSpace" />
+  <remove-project name="platform/packages/apps/QuickSearchBox" path="packages/apps/QuickSearchBox" />
+  <remove-project name="LineageOS/android_packages_apps_Recorder" path="packages/apps/Recorder" />
+  <remove-project name="LineageOS/android_packages_apps_Seedvault" path="packages/apps/Seedvault" />
+  <remove-project name="platform/packages/apps/SystemUIGo" path="packages/apps/SystemUIGo" />
+  <remove-project name="LineageOS/android_packages_apps_ThemePicker" path="packages/apps/ThemePicker" />
+  <remove-project name="LineageOS/android_packages_apps_Twelve" path="packages/apps/Twelve" />
+  <remove-project name="platform/packages/apps/UniversalMediaPlayer" path="packages/apps/UniversalMediaPlayer" />
+  <remove-project name="LineageOS/android_packages_apps_Updater" path="packages/apps/Updater" />
+  <remove-project name="platform/packages/apps/VirtualGamepad" path="packages/apps/VirtualGamepad" />
+  <remove-project name="platform/packages/screensavers/Basic" path="packages/screensavers/Basic" />
+  <remove-project name="LineageOS/android_packages_screensavers_PhotoTable" path="packages/screensavers/PhotoTable" />
+  <remove-project name="LineageOS/android_packages_services_BuiltInPrintService" path="packages/services/BuiltInPrintService" />
+  <remove-project name="platform/packages/services/CrossDeviceSync" path="packages/services/CrossDeviceSync" />
+  <remove-project name="LineageOS/android_packages_services_DeviceAsWebcam" path="packages/services/DeviceAsWebcam" />
+  <remove-project name="platform/packages/services/DroidfoodAttestationFixer" path="packages/services/DroidfoodAttestationFixer" />
+  <remove-project name="LineageOS/android_packages_wallpapers_LivePicker" path="packages/wallpapers/LivePicker" />
+</manifest>

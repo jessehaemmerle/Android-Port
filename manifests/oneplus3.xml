@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Local manifest fuer den OnePlus 3 (oneplus3, msm8996) auf lineage-24.0
+  (= AOSP android-17.0.0_r1). Nach .repo/local_manifests/ kopieren (macht scripts/sync.sh).
+
+  Der Device-Tree (device/oneplus/oneplus3, device/oneplus/common,
+  device/oppo/common) liegt in DIESEM Repo unter device/ und wird von
+  scripts/sync.sh per rsync in den Quellbaum kopiert.
+-->
+<manifest>
+  <remote name="github" fetch="https://github.com/" />
+  <remote name="gitlab" fetch="https://gitlab.com/" />
+
+  <!-- Kernel 3.18 (OnePlus), letzter Stand von Lineage -->
+  <project name="LineageOS/android_kernel_oneplus_msm8996" path="kernel/oneplus/msm8996"
+           remote="github" revision="lineage-18.1" />
+
+  <!-- Qualcomm-CAF-HALs fuer msm8996. Neueste vorhandene Zweige:
+       audio 22.2 (Android 15), display/media 23.0 (Android 16).
+       Fuer Android 17 muessen sie nachgezogen werden (siehe docs/PORTING.md). -->
+  <project name="LineageOS/android_hardware_qcom_audio" path="hardware/qcom-caf/msm8996/audio"
+           remote="github" revision="lineage-22.2-caf-msm8996" />
+  <project name="LineageOS/android_hardware_qcom_display" path="hardware/qcom-caf/msm8996/display"
+           remote="github" revision="lineage-23.0-caf-msm8996" />
+  <project name="LineageOS/android_hardware_qcom_media" path="hardware/qcom-caf/msm8996/media"
+           remote="github" revision="lineage-23.0-caf-msm8996" />
+
+  <!-- Proprietaere Blobs: nur bis lineage-19.1 vorhanden. Besser selbst aus dem
+       eigenen Geraet ziehen: device/oneplus/oneplus3/extract-files.sh -->
+  <project name="TheMuppets/proprietary_vendor_oneplus" path="vendor/oneplus"
+           remote="github" revision="lineage-19.1" clone-depth="1" />
+
+  <!-- Minimale Google-Apps (MindTheGapps, Android-17-Zweig "cinnamonbun"):
+       Play Store, Play-Dienste-Rahmen, Setup Wizard, Google-App. -->
+  <project name="MindTheGapps/vendor_gapps" path="vendor/gapps"
+           remote="gitlab" revision="cinnamonbun" clone-depth="1" />
+</manifest>
