@@ -8,9 +8,16 @@
 - Neuestes AOSP-Tag: `android-17.0.0_r1` (`lineage-24.0`). `lineage-23.0` basiert auf `android-16.0.0_r1`.
 - Der Device-Tree `LineageOS/android_device_oneplus_oneplus3` endet bei `lineage-18.1`, der Kernel ebenso (3.18.124).
   Es gibt keinen öffentlichen OnePlus-3-Tree für Android 12–16 (gesucht auf GitHub, nur ältere Forks).
-- `lineage-23.0` führt die msm8996-HALs im eigenen Manifest (`hardware/qcom-caf/msm8996/{audio,display,media}`),
-  `lineage-24.0` nicht mehr. **Audio-Zweig `lineage-23.0-caf-msm8996` existiert auf GitHub nicht**, `repo sync` würde
-  scheitern; `manifests/oneplus3.xml` biegt ihn per `extend-project` auf `lineage-22.2-caf-msm8996` um.
+- **Korrektur:** Ich hatte behauptet, `lineage-23.0` führe die msm8996-HALs im eigenen Manifest. Das war falsch: Die drei
+  Projekte `hardware/qcom-caf/msm8996/{audio,display,media}` und die Linkfiles dazu stehen in `snippets/lineage.xml`
+  **auskommentiert** (`<!-- ... -->`); mein `grep` hatte die Kommentarzeilen mitgezählt. Lineage baut msm8996 in 23.0 also
+  nicht mehr. `manifests/oneplus3.xml` nimmt die Projekte wieder auf (Display/Media `lineage-23.0-caf-msm8996`, Audio
+  `lineage-22.2-caf-msm8996`, weil es den 23.0-Zweig dort nicht gibt), `scripts/sync.sh` legt die Linkfiles als Symlinks an.
+  Ebenfalls auskommentiert: `hardware/qcom/{bt,camera,data/ipacfg-mgr,display,gps,media}`. `hardware/qcom-caf/common` kennt
+  `msm8996` weiter (`UM_3_18_HAL_FAMILY`, `QCOM_HARDWARE_VARIANT := msm8996`).
+- Der erste echte `repo sync` scheiterte außerdem an `remote github already exists with different attributes`: Mein
+  Local-Manifest definierte `github` ein zweites Mal. Entfernt. `scripts/check_manifest.sh` führt die Manifeste mit dem
+  echten `repo` zusammen und prüft die wichtigen Projekte (ohne großen Download).
 - Bei den Lineage-Geräte-Trees ist der Zweig `lineage-23.0` oft nur ein Alias auf `lineage-22.2` (Beispiel
   `oneplus_sdm845-common`: identischer Commit). Die 22.2-Trees sind also nicht automatisch 23.0-tauglich: ihr
   `PRODUCT_FULL_TREBLE_OVERRIDE` und `PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE` sind in Android 16 obsolet.

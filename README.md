@@ -3,7 +3,7 @@
 Ziel: ein möglichst neues Android auf dem OnePlus 3, so schlank wie möglich, mit minimalen Google-Apps.
 
 Das neueste AOSP ist `android-17.0.0_r1` (LineageOS 24.0). Dort fehlen die msm8996-HALs im Manifest ganz.
-Gewählt ist deshalb `lineage-23.0` (Android 16): Das Lineage-Manifest bringt die msm8996-HALs mit.
+Gewählt ist deshalb `lineage-23.0` (Android 16): Die msm8996-HALs hat Lineage dort auskommentiert; das Local-Manifest holt sie wieder.
 
 **Stand: Gerüst, nicht gebaut, nicht gebootet.** Der Build lief nicht, weil die Entwicklungsumgebung
 (4 Kerne, 15 GB RAM, ~60 GB Platz) dafür zu klein ist. Ob das Ergebnis bootet, ist offen.
@@ -31,9 +31,10 @@ Offiziell unterstützt LineageOS den OnePlus 3 nur bis `lineage-18.1` (Android 1
 
 ## Inhalt
 
-- `manifests/oneplus3.xml`: Local-Manifest (Kernel, Audio-HAL-Zweig, Blobs, GApps)
+- `manifests/oneplus3.xml`: Local-Manifest (Kernel, msm8996-HALs, Blobs, GApps)
 - `manifests/strip-core.xml`: 218 Projekte entfernt (Auto, TV, Emulator, Tests, Mac-Toolchains, fremde SoCs/Kernel)
 - `manifests/strip-apps.xml`: 40 weitere Projekte entfernt (Browser, Musik, Kalender, Uhr, Rechner, Updater, Shell-Tools ...)
+- `scripts/check_manifest.sh`: führt die Manifeste mit dem echten `repo` zusammen und prüft sie (ohne großen Download)
 - `scripts/gen_strip_manifest.py`: erzeugt die beiden Strip-Listen und prüft jeden Pfad gegen das echte Manifest
 - `tools/repartition/`: legt die Vendor-Partition an (GPT-Werkzeug mit Tests)
 - `kernel/`: Kernel-Patchserie, defconfig, nicht portierte Teile, Werkzeuge

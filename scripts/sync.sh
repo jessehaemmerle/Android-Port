@@ -37,6 +37,9 @@ repo sync -c --no-tags --no-clone-bundle -j"$(nproc)" --force-sync
 rsync -a --delete "$SRC/device/oneplus/oneplus3/" device/oneplus/oneplus3/
 rsync -a --delete "$SRC/device/oneplus/common/"   device/oneplus/common/
 rsync -a --delete "$SRC/device/oppo/common/"      device/oppo/common/
+# lineage-23.0 hat die Linkfiles fuer hardware/qcom-caf/msm8996 auskommentiert; ohne sie werden die HALs dort nicht gebaut
+ln -sfn ../common/os_pickup.bp hardware/qcom-caf/msm8996/Android.bp
+ln -sfn ../common/os_pickup.mk hardware/qcom-caf/msm8996/Android.mk
 # OnePlus-3-Patches auf den Kernel legen (idempotent: erst sauber zuruecksetzen)
 git -C kernel/oneplus/msm8996 checkout -q -- . && git -C kernel/oneplus/msm8996 clean -fdq
 for p in "$SRC"/kernel/patches/*.patch; do

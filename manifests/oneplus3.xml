@@ -8,7 +8,8 @@
   scripts/sync.sh per rsync in den Quellbaum kopiert.
 -->
 <manifest>
-  <remote name="github" fetch="https://github.com/" />
+  <!-- Das Remote "github" kommt aus dem LineageOS-Manifest (fetch=".." = https://github.com/); eine zweite
+       Definition mit anderen Attributen laesst "repo sync" mit "remote github already exists" abbrechen. -->
   <remote name="gitlab" fetch="https://gitlab.com/" />
 
   <!-- Kernel: gepflegter Lineage-4.4.302-Kernel fuer msm8996 (Xiaomi-Zweig lineage-22.2).
@@ -17,11 +18,16 @@
   <project name="LineageOS/android_kernel_xiaomi_msm8996" path="kernel/oneplus/msm8996"
            remote="github" revision="lineage-22.2" clone-depth="1" />
 
-  <!-- Die msm8996-CAF-HALs (hardware/qcom-caf/msm8996/{audio,display,media}) bringt das
-       lineage-23.0-Manifest selbst mit. Aber: der Audio-Zweig lineage-23.0-caf-msm8996
-       existiert auf GitHub nicht (geprueft 2026-11-25), daher der neueste vorhandene. -->
-  <extend-project name="LineageOS/android_hardware_qcom_audio" path="hardware/qcom-caf/msm8996/audio"
-                  revision="lineage-22.2-caf-msm8996" />
+  <!-- msm8996-CAF-HALs. lineage-23.0 hat diese drei Projekte UND die zugehoerigen Linkfiles in
+       snippets/lineage.xml auskommentiert (msm8996 wird dort nicht mehr gebaut), also muessen sie hier
+       wieder rein. Die Linkfiles (hardware/qcom-caf/msm8996/Android.bp und Android.mk) legt scripts/sync.sh an.
+       Zweige (geprueft): display/media haben lineage-23.0-caf-msm8996, Audio endet bei 22.2. -->
+  <project name="LineageOS/android_hardware_qcom_audio" path="hardware/qcom-caf/msm8996/audio"
+           remote="github" revision="lineage-22.2-caf-msm8996" clone-depth="1" />
+  <project name="LineageOS/android_hardware_qcom_display" path="hardware/qcom-caf/msm8996/display"
+           remote="github" revision="lineage-23.0-caf-msm8996" clone-depth="1" />
+  <project name="LineageOS/android_hardware_qcom_media" path="hardware/qcom-caf/msm8996/media"
+           remote="github" revision="lineage-23.0-caf-msm8996" clone-depth="1" />
 
   <!-- Proprietaere Blobs: nur bis lineage-19.1 vorhanden. Besser selbst aus dem
        eigenen Geraet ziehen: device/oneplus/oneplus3/extract-files.sh -->
