@@ -26,6 +26,7 @@ Offiziell unterstützt LineageOS den OnePlus 3 nur bis `lineage-18.1` (Android 1
 |---|---|
 | Kernel | 4.4.302 (Lineage msm8996) + OnePlus-3-Patches; **baut** zu `Image.gz-dtb`, nicht gebootet. Lader/Dash-Charge und Audio-Maschinentreiber fehlen (siehe `kernel/README.md`) |
 | Device-Tree | auf lineage-23.0 angepasst, soweit gegen den echten Quelltext prüfbar. **Nicht gebaut**, weil das den vollen Quellbaum braucht |
+| Partitionen | `vendor`-Partition (1 GiB) wird mit `tools/repartition/op3_add_vendor.py` aus `userdata` angelegt; Werkzeug an Abbildern getestet, nicht am Gerät (`docs/REPARTITION.md`) |
 | Blobs | `extract-files.py` (Python, wie lineage-23.0 es verlangt); Blobs müssen aus dem eigenen Gerät kommen |
 
 ## Inhalt
@@ -34,6 +35,7 @@ Offiziell unterstützt LineageOS den OnePlus 3 nur bis `lineage-18.1` (Android 1
 - `manifests/strip-core.xml`: 218 Projekte entfernt (Auto, TV, Emulator, Tests, Mac-Toolchains, fremde SoCs/Kernel)
 - `manifests/strip-apps.xml`: 40 weitere Projekte entfernt (Browser, Musik, Kalender, Uhr, Rechner, Updater, Shell-Tools ...)
 - `scripts/gen_strip_manifest.py`: erzeugt die beiden Strip-Listen und prüft jeden Pfad gegen das echte Manifest
+- `tools/repartition/`: legt die Vendor-Partition an (GPT-Werkzeug mit Tests)
 - `kernel/`: Kernel-Patchserie, defconfig, nicht portierte Teile, Werkzeuge
 - `device/`: OnePlus-3-Device-Tree (Basis `lineage-18.1`, auf 23.0 angepasst) mit minimalem Produkt `lineage_oneplus3` (Lineage-Mini-Telefon + GApps)
 - `scripts/sync.sh`, `extract-blobs.sh`, `build.sh`: Quellbaum holen (inkl. Kernel + Patches), Blobs ziehen, bauen

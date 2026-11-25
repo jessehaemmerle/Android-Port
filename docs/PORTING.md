@@ -55,9 +55,8 @@ Ob das **Laufzeitverhalten** unter Android 16 (VINTF/Framework-Matrix) noch pass
 
 ## Blocker, die ich kenne (nach Gewicht)
 
-1. **Vendor-Partition.** Die fstab des OnePlus-3-Trees kennt keine `vendor`-/`cust`-Partition (die Xiaomi-msm8996-Referenz mountet `/vendor` von `cust`).
-   `BOARD_VNDK_VERSION := current` und `TARGET_COPY_OUT_VENDOR := vendor` ohne eigene Partition ist so nicht erprobt.
-   Entweder Vendor ins System-Image oder die Partition neu aufteilen. **Entscheidung nötig**, siehe unten.
+1. **Partitionierung (Vendor + Systemgröße).** Die Vendor-Partition muss auf dem Gerät erst angelegt werden (`docs/REPARTITION.md`,
+   nicht am Gerät getestet). `system` hat nur 3,15 GB, für Android 16 mit GApps ist das vermutlich knapp.
 2. **Kernel-Lücken** (siehe `kernel/README.md`): kein Dash Charge, kein Audio-Maschinentreiber für den TFA9890
    (voraussichtlich kein Lautsprecher), alter 3.18-Audio-Teil im DTS, Kamera-EEPROM/Aktuator-Teile, Fuel-Gauge bq27541.
 3. **SELinux.** Der Sepolicy-Baum des Geräts ist von 2019 (Android 9); Android 16 hat die Plattform-Policy stark
@@ -66,15 +65,12 @@ Ob das **Laufzeitverhalten** unter Android 16 (VINTF/Framework-Matrix) noch pass
    nicht strikt, aber Features wie eBPF-Netzwerkzählung sind bei 4.4 begrenzt (Vermutung).
 5. **32-Bit-Anteil.** Das Gerät baut `arm64` + `arm`; ob der 32-Bit-Teil der Blobs noch lädt, ist offen.
 
-## Offene Entscheidung: Vendor-Partition
+## Vendor-Partition: entschieden
 
-Die fstab und die `BoardConfig.mk` des OnePlus-3-Trees kennen `system` (3,15 GB), `cache` (256 MB), `userdata`, `boot`,
-`recovery` und `misc`, aber kein `vendor`. Optionen:
-
-1. Vendor im System-Image lassen (`/vendor` als Symlink nach `/system/vendor`). Am wenigsten Aufwand, bricht aber das
-   Treble-Modell (Vendor lässt sich nicht getrennt aktualisieren).
-2. Eine Partition neu anlegen (`cache` ist mit 256 MB vermutlich zu klein, also aus `userdata`). Verlangt
-   Neupartitionierung mit Datenverlust und eine eigene fstab.
+Es wird eine eigene `vendor`-Partition (1 GiB) angelegt, vom Anfang von `userdata` abgeschnitten (Datenverlust ist
+vereinbart). Device-Tree: `/vendor` von `by-name/vendor` mit `first_stage_mount`, `BOARD_VENDORIMAGE_*`,
+Mountpunkte-Module aus `hardware/qcom-caf/common` (in 23.0 geprüft), Ramdisk-fstab, `/data` als ext4 mit FBE (`ice`).
+Werkzeug und Ablauf: `docs/REPARTITION.md`. Das Werkzeug ist an Abbildern getestet, nicht auf einem Gerät.
 
 ## Weg zu Android 17
 

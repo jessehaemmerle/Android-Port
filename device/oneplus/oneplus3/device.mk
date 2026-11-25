@@ -417,6 +417,12 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/powerhint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.xml
 
+# Leere Mountpunkte im Vendor-Image (hardware/qcom-caf/common, Modulnamen in lineage-23.0 geprueft)
+PRODUCT_PACKAGES += \
+    vendor_bt_firmware_mountpoint \
+    vendor_dsp_mountpoint \
+    vendor_firmware_mnt_mountpoint
+
 # Protobuf: prebuilts/vndk/v28 gibt es in lineage-23.0 nicht mehr (nur v30..v34).
 # hardware/lineage/compat liefert die alten Vendor-Bibliotheken unter dem Original-Namen.
 PRODUCT_PACKAGES += \
@@ -444,6 +450,7 @@ PRODUCT_PACKAGES += \
 # Ramdisk
 PRODUCT_PACKAGES += \
     fstab.qcom \
+    fstab.qcom.ramdisk \
     init.class_main.sh \
     init.qcom.early_boot.sh \
     init.qcom.post_boot.sh \

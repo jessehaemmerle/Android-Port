@@ -1,2 +1,11 @@
 soong_namespace {
 }
+
+// fstab: Vendor-Kopie plus Ramdisk-Kopie (first_stage_mount liest die fstab aus dem Ramdisk).
+// Die Variante "fstab.qcom.ramdisk" installiert die Ramdisk-Kopie.
+prebuilt_etc {
+    name: "fstab.qcom",
+    src: "rootdir/etc/fstab.qcom",
+    soc_specific: true,
+    ramdisk_available: true,
+}
