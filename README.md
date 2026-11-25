@@ -2,8 +2,9 @@
 
 Ziel: ein möglichst neues Android auf dem OnePlus 3, so schlank wie möglich, mit minimalen Google-Apps.
 
-Das neueste AOSP ist `android-17.0.0_r1` (LineageOS 24.0). Dort fehlen die msm8996-HALs im Manifest ganz.
-Gewählt ist deshalb `lineage-23.0` (Android 16): Die msm8996-HALs hat Lineage dort auskommentiert; das Local-Manifest holt sie wieder.
+Das neueste AOSP ist `android-17.0.0_r1` (LineageOS 24.0). Gewählt ist `lineage-23.0` (Android 16): Für msm8996 gibt es dort noch
+HAL-Zweige (`lineage-23.0-caf-msm8996` für Display und Media). Lineage selbst baut msm8996 in 23.0 nicht mehr, die Projekte sind im
+Original-Manifest auskommentiert; das Local-Manifest holt sie wieder.
 
 **Stand: Gerüst, nicht gebaut, nicht gebootet.** Der Build lief nicht, weil die Entwicklungsumgebung
 (4 Kerne, 15 GB RAM, ~60 GB Platz) dafür zu klein ist. Ob das Ergebnis bootet, ist offen.
