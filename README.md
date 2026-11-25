@@ -46,12 +46,15 @@ Die Liste steht in `scripts/gen_strip_manifest.py` (`CORE`, `APPS`) und lässt s
 
 ## Benutzung (auf einem eigenen Rechner)
 
-Voraussetzung: Linux, ≥ 32 GB RAM (oder viel Swap), ≥ 350 GB frei, `repo`, `rsync`, `ccache`, Build-Abhängigkeiten laut
+Voraussetzung: Linux, ≥ 32 GB RAM (oder viel Swap), ≥ 350 GB frei, `repo` (siehe Hinweis von `scripts/sync.sh`), `rsync`, `git-lfs`, `ccache`, Build-Abhängigkeiten laut
 [LineageOS-Wiki](https://wiki.lineageos.org/devices/). Ein OnePlus 3 mit entsperrtem Bootloader.
 
 ```sh
-scripts/sync.sh ~/lineage           # STRIP=core|apps|none
-scripts/extract-blobs.sh ~/lineage  # Blobs vom laufenden Gerät (adb) ziehen
-WITH_GMS=false scripts/build.sh ~/lineage   # ohne GApps; ohne WITH_GMS=false mit GApps
+# Zielordner ohne Angabe: neben diesem Repo (liegt das Repo in /mnt/daten2/Android-Port, wird es /mnt/daten2/lineage).
+# Anderer Ort: Ordner als Argument oder LINEAGE_ROOT=/pfad setzen.
+CHECK_ONLY=1 scripts/sync.sh        # prüft nur Platz, RAM und Werkzeuge (u. a. 'repo')
+scripts/sync.sh                     # STRIP=core|apps|none
+scripts/extract-blobs.sh            # Blobs vom laufenden Gerät (adb) ziehen
+WITH_GMS=false scripts/build.sh     # ohne GApps; ohne WITH_GMS=false mit GApps
 ```
 Der erste Build bricht sehr wahrscheinlich ab. Die Fehler und der Weg dahin stehen in `docs/PORTING.md`.

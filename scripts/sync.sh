@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # Holt LineageOS lineage-23.0 (AOSP android-16.0.0_r1), entschlackt den Baum und
 # legt den OnePlus-3-Device-Tree hinein.
-#   scripts/sync.sh [ZIELVERZEICHNIS]      (Default: ~/lineage)
+#   scripts/sync.sh [ZIELVERZEICHNIS]      (Default: neben diesem Repo, z.B. /mnt/daten2/lineage)
+#   CHECK_ONLY=1 scripts/sync.sh           nur Platz, RAM und Werkzeuge pruefen
 # Umgebung:  STRIP=core|apps|none   (Default: apps = core + optionale Apps)
 set -euo pipefail
 
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
-ROOT="${1:-$HOME/lineage}"
+# shellcheck source=common.sh
+source "$SRC/scripts/common.sh"
+ROOT="${1:-$(default_root)}"
 STRIP="${STRIP:-apps}"
 BRANCH=lineage-23.0
 
-free_gb=$(df -BG --output=avail "$(dirname "$ROOT")" | tail -1 | tr -dc 0-9)
-ram_gb=$(free -g | awk '/^Mem:/{print $2}')
-(( free_gb >= 350 )) || echo "WARNUNG: nur ${free_gb} GB frei, Quellbaum + Build brauchen ca. 350 GB." >&2
-(( ram_gb >= 30 ))  || echo "WARNUNG: nur ${ram_gb} GB RAM (+Swap), der Build will >= 32 GB." >&2
-command -v repo >/dev/null || { echo "'repo' fehlt: https://source.android.com/docs/setup/download#installing-repo" >&2; exit 1; }
+preflight "$ROOT" || exit 1
+[ "${CHECK_ONLY:-0}" = 1 ] && { echo "Pruefung beendet (CHECK_ONLY=1)."; exit 0; }
 
 mkdir -p "$ROOT" && cd "$ROOT"
 [ -d .repo ] || repo init -u https://github.com/LineageOS/android.git -b "$BRANCH" \

@@ -4,6 +4,9 @@
 # OxygenOS-Image. Ohne diese Blobs bootet das Geraet nicht.
 #   scripts/extract-blobs.sh [ANDROID_ROOT] [PFAD_ZUM_STOCK_DUMP]
 set -euo pipefail
-ROOT="${1:-$HOME/lineage}"
+SRC="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=common.sh
+source "$SRC/scripts/common.sh"
+ROOT="${1:-$(default_root)}"
 cd "$ROOT/device/oneplus/oneplus3"
 ./extract-files.py ${2:+"$2"}
