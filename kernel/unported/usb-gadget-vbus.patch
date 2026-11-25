@@ -1,0 +1,36 @@
+diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
+index 22f0c5ab354..a25ede77c9a 100644
+--- a/drivers/usb/dwc3/gadget.c
++++ b/drivers/usb/dwc3/gadget.c
+@@ -2991,7 +2991,6 @@ static void dwc3_gadget_reset_interrupt(struct dwc3 *dwc)
+ 
+ 	dwc3_gadget_usb3_phy_suspend(dwc, false);
+ 
+-	usb_gadget_vbus_draw(&dwc->gadget, 0);
+ 
+ 	if (dwc->gadget.speed != USB_SPEED_UNKNOWN)
+ 		dwc3_disconnect_gadget(dwc);
+diff --git a/drivers/usb/gadget/composite.c b/drivers/usb/gadget/composite.c
+index aa6d1010b40..067e6ac7aa9 100644
+--- a/drivers/usb/gadget/composite.c
++++ b/drivers/usb/gadget/composite.c
+@@ -2322,7 +2322,6 @@ composite_suspend(struct usb_gadget *gadget)
+ 	cdev->suspended = 1;
+ 	spin_unlock_irqrestore(&cdev->lock, flags);
+ 
+-	usb_gadget_vbus_draw(gadget, 2);
+ }
+ 
+ static void
+diff --git a/drivers/usb/gadget/legacy/inode.c b/drivers/usb/gadget/legacy/inode.c
+index db2becd31a5..c73d685a427 100644
+--- a/drivers/usb/gadget/legacy/inode.c
++++ b/drivers/usb/gadget/legacy/inode.c
+@@ -1476,7 +1476,6 @@ gadgetfs_setup (struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
+ 		if (0 == (u8) w_value) {
+ 			value = 0;
+ 			dev->current_config = 0;
+-			usb_gadget_vbus_draw(gadget, 8 /* mA */ );
+ 			// user mode expected to disable endpoints
+ 		} else {
+ 			u8	config, power;

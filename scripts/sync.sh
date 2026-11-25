@@ -36,4 +36,9 @@ repo sync -c --no-tags --no-clone-bundle -j"$(nproc)" --force-sync
 rsync -a --delete "$SRC/device/oneplus/oneplus3/" device/oneplus/oneplus3/
 rsync -a --delete "$SRC/device/oneplus/common/"   device/oneplus/common/
 rsync -a --delete "$SRC/device/oppo/common/"      device/oppo/common/
+# OnePlus-3-Patches auf den Kernel legen (idempotent: erst sauber zuruecksetzen)
+git -C kernel/oneplus/msm8996 checkout -q -- . && git -C kernel/oneplus/msm8996 clean -fdq
+for p in "$SRC"/kernel/patches/*.patch; do
+  git -C kernel/oneplus/msm8996 apply --whitespace=nowarn "$p" || { echo "Patch $p passt nicht" >&2; exit 1; }
+done
 echo "Fertig. Weiter mit: scripts/build.sh $ROOT   (vorher Blobs: scripts/extract-blobs.sh)"

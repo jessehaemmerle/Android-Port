@@ -11,9 +11,11 @@
   <remote name="github" fetch="https://github.com/" />
   <remote name="gitlab" fetch="https://gitlab.com/" />
 
-  <!-- Kernel 3.18 (OnePlus), letzter Stand von Lineage -->
-  <project name="LineageOS/android_kernel_oneplus_msm8996" path="kernel/oneplus/msm8996"
-           remote="github" revision="lineage-18.1" />
+  <!-- Kernel: gepflegter Lineage-4.4.302-Kernel fuer msm8996 (Xiaomi-Zweig lineage-22.2).
+       Der OnePlus-3-Kernel selbst endet bei 3.18 (lineage-18.1), das reicht fuer Android 16 nicht.
+       Die OnePlus-3-Treiber und -DTS kommen als Patch-Serie aus kernel/patches/ (scripts/sync.sh). -->
+  <project name="LineageOS/android_kernel_xiaomi_msm8996" path="kernel/oneplus/msm8996"
+           remote="github" revision="lineage-22.2" clone-depth="1" />
 
   <!-- Die msm8996-CAF-HALs (hardware/qcom-caf/msm8996/{audio,display,media}) bringt das
        lineage-23.0-Manifest selbst mit. Aber: der Audio-Zweig lineage-23.0-caf-msm8996

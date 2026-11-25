@@ -1,0 +1,251 @@
+diff --git a/drivers/media/platform/msm/camera_v2/sensor/actuator/msm_actuator.c b/drivers/media/platform/msm/camera_v2/sensor/actuator/msm_actuator.c
+index ce530034..26549aa1 100644
+--- a/drivers/media/platform/msm/camera_v2/sensor/actuator/msm_actuator.c
++++ b/drivers/media/platform/msm/camera_v2/sensor/actuator/msm_actuator.c
+@@ -1008,7 +1008,7 @@ static int32_t msm_actuator_park_lens(struct msm_actuator_ctrl_t *a_ctrl)
+ 			}
+ 			a_ctrl->i2c_tbl_index = 0;
+ 			/* Use typical damping time delay to avoid tick sound */
+-			usleep_range(10000, 12000);
++			usleep_range(20000, 22000);
+ 		}
+ 	}
+ 
+diff --git a/drivers/media/platform/msm/camera_v2/sensor/msm_sensor.c b/drivers/media/platform/msm/camera_v2/sensor/msm_sensor.c
+index bf2af5f8..5f8cd955 100644
+--- a/drivers/media/platform/msm/camera_v2/sensor/msm_sensor.c
++++ b/drivers/media/platform/msm/camera_v2/sensor/msm_sensor.c
+@@ -22,6 +22,8 @@
+ #undef CDBG
+ #define CDBG(fmt, args...) pr_debug(fmt, ##args)
+ 
++bool is_3p8sp = false;
++
+ static struct msm_camera_i2c_fn_t msm_sensor_cci_func_tbl;
+ static struct msm_camera_i2c_fn_t msm_sensor_secure_func_tbl;
+ 
+@@ -277,6 +279,13 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
+ 
+ 	pr_debug("%s: read id: 0x%x expected id 0x%x:\n",
+ 			__func__, chipid, slave_info->sensor_id);
++	if(s_ctrl->front_camera_name &&(((!strcmp(s_ctrl->front_camera_name, "IMX179")) && msm_sensor_id_by_mask(s_ctrl, chipid) == S5K3P8) ||
++		((!strcmp(s_ctrl->front_camera_name, "S5K3P8")) && msm_sensor_id_by_mask(s_ctrl, chipid) == IMX179))) {
++		pr_err("Support front camera %s, but it is %s. Don't probe.\n",s_ctrl->front_camera_name, sensor_name);
++		return -ENODEV;
++	}
++	if(chipid == 0x3108 && !is_3p8sp)
++		chipid += 1;
+ 	if (msm_sensor_id_by_mask(s_ctrl, chipid) != slave_info->sensor_id) {
+ 		pr_err("%s chip id %x does not match %x\n",
+ 				__func__, chipid, slave_info->sensor_id);
+@@ -341,6 +350,14 @@ static long msm_sensor_subdev_ioctl(struct v4l2_subdev *sd,
+ 		pr_err("%s s_ctrl NULL\n", __func__);
+ 		return -EBADF;
+ 	}
++	if (cmd == 0 && arg == NULL)
++	{
++		pr_err("ftm: power down");
++		return msm_sensor_power_down(s_ctrl);
++	} else if (cmd ==1 && arg == NULL) {
++		pr_err("ftm: power up");
++		return msm_sensor_power_up(s_ctrl);
++	}
+ 	switch (cmd) {
+ 	case VIDIOC_MSM_SENSOR_CFG:
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/media/platform/msm/camera_v2/sensor/msm_sensor.h b/drivers/media/platform/msm/camera_v2/sensor/msm_sensor.h
+index 8f55f453..74d02725 100644
+--- a/drivers/media/platform/msm/camera_v2/sensor/msm_sensor.h
++++ b/drivers/media/platform/msm/camera_v2/sensor/msm_sensor.h
+@@ -37,6 +37,8 @@
+ 
+ #define DEFINE_MSM_MUTEX(mutexname) \
+ 	static struct mutex mutexname = __MUTEX_INITIALIZER(mutexname)
++#define IMX179 0x179
++#define S5K3P8 0x3108
+ 
+ enum msm_sensor_sensor_slave_info_type {
+ 	MSM_SENSOR_SLAVEADDR_DATA,
+@@ -90,6 +92,7 @@ struct msm_sensor_ctrl_t {
+ 	uint8_t is_csid_tg_mode;
+ 	uint32_t is_secure;
+ 	uint8_t bypass_video_node_creation;
++	const char *front_camera_name;
+ };
+ 
+ int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp);
+diff --git a/drivers/media/platform/msm/camera_v2/sensor/msm_sensor_driver.c b/drivers/media/platform/msm/camera_v2/sensor/msm_sensor_driver.c
+index a02a7a6a..84b2fc89 100644
+--- a/drivers/media/platform/msm/camera_v2/sensor/msm_sensor_driver.c
++++ b/drivers/media/platform/msm/camera_v2/sensor/msm_sensor_driver.c
+@@ -19,6 +19,10 @@
+ #include "msm_cci.h"
+ #include "msm_camera_dt_util.h"
+ 
++#include <linux/proc_fs.h>
++bool pdaf_calibration_flag = false;
++uint32_t is_pdaf_supported = 0;
++
+ /* Logging macro */
+ #undef CDBG
+ #define CDBG(fmt, args...) pr_debug(fmt, ##args)
+@@ -1377,6 +1381,12 @@ static int32_t msm_sensor_driver_get_dt_data(struct msm_sensor_ctrl_t *s_ctrl)
+ 	CDBG("%s qcom,mclk-23880000 = %d\n", __func__,
+ 		s_ctrl->set_mclk_23880000);
+ 
++	if (BACK_CAMERA_B == sensordata->sensor_info->position) {
++		if (0 > of_property_read_u32(of_node, "qcom,pdaf-support", &is_pdaf_supported)) {
++			CDBG("%s:%d Invalid pdaf supported\n", __func__, __LINE__);
++		}
++	}
++
+ 	return rc;
+ 
+ FREE_VREG_DATA:
+@@ -1456,6 +1466,38 @@ FREE_SENSOR_I2C_CLIENT:
+ 	return rc;
+ }
+ 
++static ssize_t pdaf_proc_read(struct file *filp, char __user *buff,
++								   size_t len, loff_t *data)
++{
++	char value[2] = {0};
++
++	snprintf(value, sizeof(value), "%d", (is_pdaf_supported << 1 | pdaf_calibration_flag));
++
++	pr_err("%s, is_pdaf_supported=%d,calibration_flag=%d,value=%s\n", __func__,
++		  is_pdaf_supported, pdaf_calibration_flag, value);
++	return simple_read_from_buffer(buff, len, data, value,1);
++}
++
++static const struct file_operations pdaf_test_fops = {
++	.owner		= THIS_MODULE,
++	.read		= pdaf_proc_read,
++	//.write		= pdaf_proc_write,
++};
++
++static int msm_sensor_driver_pdaf_proc_init(void)
++{
++	int ret=0;
++	struct proc_dir_entry *proc_entry;
++
++	proc_entry = proc_create_data("pdaf_info", 0666, NULL, &pdaf_test_fops, NULL);
++	if (proc_entry == NULL)
++	{
++		ret = -ENOMEM;
++		pr_err("[%s]: Error! Couldn't create pdaf_calibration proc entry\n", __func__);
++	}
++	return ret;
++}
++
+ static int32_t msm_sensor_driver_platform_probe(struct platform_device *pdev)
+ {
+ 	int32_t rc = 0;
+@@ -1496,6 +1538,8 @@ static int32_t msm_sensor_driver_platform_probe(struct platform_device *pdev)
+ 
+ 	/* Fill device in power info */
+ 	s_ctrl->sensordata->power_info.dev = &pdev->dev;
++	if (BACK_CAMERA_B == s_ctrl->sensordata->sensor_info->position)
++		msm_sensor_driver_pdaf_proc_init();
+ 	return rc;
+ FREE_S_CTRL:
+ 	kfree(s_ctrl);
+diff --git a/drivers/media/platform/msm/camera_v2/sensor/ois/msm_ois.c b/drivers/media/platform/msm/camera_v2/sensor/ois/msm_ois.c
+index 995dd487..ea794e21 100644
+--- a/drivers/media/platform/msm/camera_v2/sensor/ois/msm_ois.c
++++ b/drivers/media/platform/msm/camera_v2/sensor/ois/msm_ois.c
+@@ -172,6 +172,7 @@ static int32_t msm_ois_write_settings(struct msm_ois_ctrl_t *o_ctrl,
+ 			switch (settings[i].data_type) {
+ 			case MSM_CAMERA_I2C_BYTE_DATA:
+ 			case MSM_CAMERA_I2C_WORD_DATA:
++				o_ctrl->i2c_client.addr_type = settings[i].addr_type;
+ 				rc = o_ctrl->i2c_client.i2c_func_tbl->i2c_write(
+ 					&o_ctrl->i2c_client,
+ 					settings[i].reg_addr,
+@@ -219,6 +220,16 @@ static int32_t msm_ois_write_settings(struct msm_ois_ctrl_t *o_ctrl,
+ 				if (rc < 0)
+ 					return rc;
+ 				break;
++			case MSM_CAMERA_I2C_SEQ_DATA:
++				o_ctrl->i2c_client.addr_type = settings[i].addr_type;
++				rc = o_ctrl->i2c_client.i2c_func_tbl->
++					i2c_write_seq(&o_ctrl->i2c_client,
++					settings[i].reg_addr,
++					settings[i].reg_data_seq,
++					settings[i].reg_data_seq_size);
++				if (rc < 0)
++					return rc;
++				break;
+ 
+ 			default:
+ 				pr_err("Unsupport data type: %d\n",
+@@ -444,6 +455,10 @@ static int32_t msm_ois_control(struct msm_ois_ctrl_t *o_ctrl,
+ {
+ 	struct reg_settings_ois_t *settings = NULL;
+ 	int32_t rc = 0;
++	uint16_t value_before=0;
++	uint16_t value_after=0;
++	uint32_t retry =5;
++	const char* rohm63165_name="a0c000.qcom,cci:qcom,ois@0";
+ 	struct msm_camera_cci_client *cci_client = NULL;
+ 	CDBG("Enter\n");
+ 
+@@ -482,6 +497,32 @@ static int32_t msm_ois_control(struct msm_ois_ctrl_t *o_ctrl,
+ 			return -EFAULT;
+ 		}
+ 
++		if (set_info->ois_params.setting_size > 50 && !strncmp (o_ctrl->pdev->name, rohm63165_name, strlen (rohm63165_name))) {
++			while (true) {
++				value_after = value_before = 0;
++				o_ctrl->i2c_client.i2c_func_tbl->i2c_read (&o_ctrl->i2c_client, 0x8200, &value_before, MSM_CAMERA_I2C_WORD_DATA);
++
++				rc = msm_ois_write_settings(o_ctrl,
++					set_info->ois_params.setting_size,
++					settings);
++
++				o_ctrl->i2c_client.i2c_func_tbl->i2c_read (&o_ctrl->i2c_client, 0x8200, &value_after, MSM_CAMERA_I2C_WORD_DATA);
++
++				//if (value_after != value_before || !retry)
++				pr_info ("ois init [0x8200]=0x%x/0x%x retry=%d\n", value_before, value_after, retry);
++
++				if ((value_before==0x735 && (value_after==0xa75 || value_after==0xe75)) || !retry)
++					break;
++
++				pr_err ("ois init fail. [0x8200]=0x%x/0x%x retry=%d\n", value_before, value_after, retry);
++
++				retry--;
++
++				msm_ois_power_down(o_ctrl);
++				msleep(100);
++				msm_ois_power_up(o_ctrl);
++			}
++		}else
+ 		rc = msm_ois_write_settings(o_ctrl,
+ 			set_info->ois_params.setting_size,
+ 			settings);
+diff --git a/include/uapi/media/msm_cam_sensor.h b/include/uapi/media/msm_cam_sensor.h
+index 91f194ab..c6f5c0f9 100644
+--- a/include/uapi/media/msm_cam_sensor.h
++++ b/include/uapi/media/msm_cam_sensor.h
+@@ -403,6 +403,9 @@ struct reg_settings_ois_t {
+ 	enum msm_camera_i2c_data_type data_type;
+ 	enum msm_ois_i2c_operation i2c_operation;
+ 	uint32_t delay;
++#define OIS_REG_DATA_SEQ_MAX 128
++    unsigned char reg_data_seq[OIS_REG_DATA_SEQ_MAX];
++    uint32_t reg_data_seq_size;
+ };
+ 
+ struct msm_ois_params_t {
+diff --git a/include/uapi/media/msm_camsensor_sdk.h b/include/uapi/media/msm_camsensor_sdk.h
+index a77ecd05..4f7b1643 100644
+--- a/include/uapi/media/msm_camsensor_sdk.h
++++ b/include/uapi/media/msm_camsensor_sdk.h
+@@ -101,6 +101,7 @@ enum msm_camera_i2c_data_type {
+ 	MSM_CAMERA_I2C_UNSET_WORD_MASK,
+ 	MSM_CAMERA_I2C_SET_BYTE_WRITE_MASK_DATA,
+ 	MSM_CAMERA_I2C_NO_DATA,
++	MSM_CAMERA_I2C_SEQ_DATA,
+ 	MSM_CAMERA_I2C_DATA_TYPE_MAX,
+ };
+ 

@@ -23,6 +23,8 @@
 
 # Device was launched with M
 $(call inherit-product, $(SRC_TARGET_DIR)/product/product_launched_with_m.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/non_ab_device.mk)
+$(call inherit-product, hardware/qcom-caf/common/common.mk)
 
 $(call inherit-product, vendor/oneplus/oneplus3/oneplus3-vendor.mk)
 
@@ -303,7 +305,7 @@ PRODUCT_PACKAGES += \
     android.hardware.health@2.1-service
 
 # HIDL
-PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE := true
+# PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE war hier gesetzt, ist in Android 16 aber obsolet (KATI_obsolete_var).
 
 PRODUCT_PACKAGES += \
     android.hidl.base@1.0
@@ -415,10 +417,11 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/powerhint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.xml
 
-# Protobuf
-PRODUCT_COPY_FILES += \
-    prebuilts/vndk/v28/arm64/arch-arm-armv8-a/shared/vndk-core/libprotobuf-cpp-lite.so:$(TARGET_COPY_OUT_VENDOR)/lib/libprotobuf-cpp-lite-v28.so \
-    prebuilts/vndk/v28/arm64/arch-arm64-armv8-a/shared/vndk-core/libprotobuf-cpp-full.so:$(TARGET_COPY_OUT_VENDOR)/lib64/libprotobuf-cpp-full-v28.so
+# Protobuf: prebuilts/vndk/v28 gibt es in lineage-23.0 nicht mehr (nur v30..v34).
+# hardware/lineage/compat liefert die alten Vendor-Bibliotheken unter dem Original-Namen.
+PRODUCT_PACKAGES += \
+    libprotobuf-cpp-full-vendorcompat \
+    libprotobuf-cpp-lite-vendorcompat
 
 # Qualcomm
 PRODUCT_PACKAGES += \
@@ -529,7 +532,7 @@ PRODUCT_PACKAGES += \
 
 # Verity
 PRODUCT_SYSTEM_VERITY_PARTITION := /dev/block/bootdevice/by-name/system
-$(call inherit-product, build/target/product/verity.mk)
+# build/target/product/verity.mk existiert in Android 16 nicht mehr (geprueft: android-16.0.0_r1)
 
 # Vibrator
 PRODUCT_PACKAGES += \

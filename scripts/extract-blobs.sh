@@ -6,4 +6,4 @@
 set -euo pipefail
 ROOT="${1:-$HOME/lineage}"
 cd "$ROOT/device/oneplus/oneplus3"
-./extract-files.sh ${2:+"$2"}
+./extract-files.py ${2:+"$2"}

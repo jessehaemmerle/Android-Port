@@ -1,0 +1,223 @@
+diff --git a/drivers/cpuidle/lpm-levels.c b/drivers/cpuidle/lpm-levels.c
+index dca59ead..7795e5f7 100644
+--- a/drivers/cpuidle/lpm-levels.c
++++ b/drivers/cpuidle/lpm-levels.c
+@@ -157,6 +157,12 @@ static bool sleep_disabled;
+ module_param_named(sleep_disabled,
+ 	sleep_disabled, bool, S_IRUGO | S_IWUSR | S_IWGRP);
+ 
++void msm_cpuidle_set_sleep_disable(bool disable)
++{
++       sleep_disabled = disable;
++       pr_info("%s:sleep_disabled=%d\n",__func__,disable);
++}
++
+ s32 msm_cpuidle_get_deep_idle_latency(void)
+ {
+ 	return 10;
+diff --git a/drivers/misc/qcom/qdsp6v2/audio_wmapro.c b/drivers/misc/qcom/qdsp6v2/audio_wmapro.c
+index d37a5789..9d60e0ae 100644
+--- a/drivers/misc/qcom/qdsp6v2/audio_wmapro.c
++++ b/drivers/misc/qcom/qdsp6v2/audio_wmapro.c
+@@ -87,7 +87,7 @@ static long audio_ioctl_shared(struct file *file, unsigned int cmd,
+ 		}
+ 		wmapro_cfg.avg_bytes_per_sec =
+ 				wmapro_config->avgbytespersecond;
+-		if ((wmapro_config->asfpacketlength <= 13376) ||
++		if ((wmapro_config->asfpacketlength <= 16384) ||
+ 		(wmapro_config->asfpacketlength > 0)) {
+ 			wmapro_cfg.block_align =
+ 				wmapro_config->asfpacketlength;
+diff --git a/drivers/pci/host/pci-msm.c b/drivers/pci/host/pci-msm.c
+index 87b0abfa..261e9f58 100644
+--- a/drivers/pci/host/pci-msm.c
++++ b/drivers/pci/host/pci-msm.c
+@@ -6945,27 +6945,6 @@ void msm_pcie_fixup_resume(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_RESUME(PCIE_VENDOR_ID_RCP, PCIE_DEVICE_ID_RCP,
+ 				 msm_pcie_fixup_resume);
+ 
+-void msm_pcie_fixup_resume_early(struct pci_dev *dev)
+-{
+-	int ret;
+-	struct msm_pcie_dev_t *pcie_dev = PCIE_BUS_PRIV_DATA(dev->bus);
+-
+-	PCIE_DBG(pcie_dev, "RC%d\n", pcie_dev->rc_idx);
+-
+-	if ((pcie_dev->link_status != MSM_PCIE_LINK_DISABLED) ||
+-		pcie_dev->user_suspend)
+-		return;
+-
+-	mutex_lock(&pcie_dev->recovery_lock);
+-	ret = msm_pcie_pm_resume(dev, NULL, NULL, 0);
+-	if (ret)
+-		PCIE_ERR(pcie_dev, "PCIe: RC%d got failure in resume:%d.\n",
+-			pcie_dev->rc_idx, ret);
+-
+-	mutex_unlock(&pcie_dev->recovery_lock);
+-}
+-DECLARE_PCI_FIXUP_RESUME_EARLY(PCIE_VENDOR_ID_RCP, PCIE_DEVICE_ID_RCP,
+-				 msm_pcie_fixup_resume_early);
+ 
+ int msm_pcie_pm_control(enum msm_pcie_pm_opt pm_opt, u32 busnr, void *user,
+ 			void *data, u32 options)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f4021636..a18a2c30 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -637,15 +637,13 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 		break;
+ 	}
+ 
+-	/* enter specified state */
+-	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
+-
+-	/* Mandatory power management transition delays */
+-	/* see PCI PM 1.1 5.6.1 table 18 */
+-	if (state == PCI_D3hot || dev->current_state == PCI_D3hot)
+-		pci_dev_d3_sleep(dev);
+-	else if (state == PCI_D2 || dev->current_state == PCI_D2)
++/*modify by yangrujin@bsp 2016/3/15, reduce pci resume times, adopt QCOM recommendation in case#02382025*/
++    if ((pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr) != PCIBIOS_DEVICE_NOT_FOUND) &&
++        ( state == PCI_D3hot || dev->current_state == PCI_D3hot)){ //If config space read fail, bypass the D3 delay.
++        pci_dev_d3_sleep(dev);
++	}else if (state == PCI_D2 || dev->current_state == PCI_D2){
+ 		udelay(PCI_PM_D2_DELAY);
++	}
+ 
+ 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+ 	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 7fe25d52..fa8639c6 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -154,7 +154,7 @@ enum ufs_desc_max_size {
+ 	 * of descriptor header.
+ 	 */
+ 	QUERY_DESC_STRING_MAX_SIZE		= 0xFE,
+-	QUERY_DESC_GEOMETRY_MAZ_SIZE		= 0x44,
++	QUERY_DESC_GEOMETRY_MAZ_SIZE		= 0x48, /* UFS 2.1 */
+ 	QUERY_DESC_POWER_MAX_SIZE		= 0x62,
+ 	QUERY_DESC_HEALTH_MAX_SIZE		= 0x25,
+ 	QUERY_DESC_RFU_MAX_SIZE			= 0x00,
+diff --git a/drivers/soc/qcom/watchdog_v2.c b/drivers/soc/qcom/watchdog_v2.c
+index 3528cb08..eb709c79 100644
+--- a/drivers/soc/qcom/watchdog_v2.c
++++ b/drivers/soc/qcom/watchdog_v2.c
+@@ -703,7 +703,7 @@ static void init_watchdog_data(struct msm_watchdog_data *wdog_dd)
+ 	wdog_dd->min_slack_ticks = UINT_MAX;
+ 	wdog_dd->min_slack_ns = ULLONG_MAX;
+ 	configure_bark_dump(wdog_dd);
+-	timeout = (wdog_dd->bark_time * WDT_HZ)/1000;
++	timeout = (wdog_dd->bark_time * WDT_HZ)/1000+5;
+ 	__raw_writel(timeout, wdog_dd->base + WDT0_BARK_TIME);
+ 	__raw_writel(timeout + 3*WDT_HZ, wdog_dd->base + WDT0_BITE_TIME);
+ 
+diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
+index 8089e582..31c6c648 100644
+--- a/drivers/usb/core/driver.c
++++ b/drivers/usb/core/driver.c
+@@ -1794,6 +1794,11 @@ static int autosuspend_check(struct usb_device *udev)
+ 			 * or else their drivers don't support autosuspend
+ 			 * and so they are permanently active.
+ 			 */
++			//Anderson@, 2016/07/01, Avoid null pointer if otg device filesystem has problem
++			if (intf == NULL) {
++				dev_err(&udev->dev, "%s intf = NULL\n", __func__);
++				return -EIO;
++			}
+ 			if (intf->dev.power.disable_depth)
+ 				continue;
+ 			if (atomic_read(&intf->dev.power.usage_count) > 0)
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 143c33cb..e0ee836b 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -4312,6 +4312,9 @@ static void hub_set_initial_usb2_lpm_policy(struct usb_device *udev)
+ 	if (hub)
+ 		connect_type = hub->ports[udev->portnum - 1]->connect_type;
+ 
++	if(udev->bos == NULL)
++		return;
++
+ 	if ((udev->bos->ext_cap->bmAttributes & cpu_to_le32(USB_BESL_SUPPORT)) ||
+ 			connect_type == USB_PORT_CONNECT_TYPE_HARD_WIRED) {
+ 		udev->usb2_hw_lpm_allowed = 1;
+diff --git a/drivers/usb/gadget/legacy/inode.c b/drivers/usb/gadget/legacy/inode.c
+index a069150d..10f21f1d 100644
+--- a/drivers/usb/gadget/legacy/inode.c
++++ b/drivers/usb/gadget/legacy/inode.c
+@@ -1417,7 +1417,6 @@ gadgetfs_setup (struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
+ 		if (0 == (u8) w_value) {
+ 			value = 0;
+ 			dev->current_config = 0;
+-			usb_gadget_vbus_draw(gadget, 8 /* mA */ );
+ 			// user mode expected to disable endpoints
+ 		} else {
+ 			u8	config, power;
+diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+index 80e3e2d6..5b6e0191 100644
+--- a/drivers/usb/host/xhci.c
++++ b/drivers/usb/host/xhci.c
+@@ -2896,6 +2896,12 @@ int xhci_check_bandwidth(struct usb_hcd *hcd, struct usb_device *udev)
+ 	xhci_dbg_ctx(xhci, virt_dev->in_ctx,
+ 		     LAST_CTX_TO_EP_NUM(le32_to_cpu(slot_ctx->dev_info)));
+ 
++	//Anderson@, 2016/09/21, If host controller is not halted, otg can't work
++	xhci_warn(xhci, "hcd->state:%d\n",hcd->state);
++	if(hcd->state == HC_STATE_QUIESCING){
++		goto command_cleanup;
++	}
++
+ 	ret = xhci_configure_endpoint(xhci, udev, command,
+ 			false, false);
+ 	if (ret)
+diff --git a/kernel/power/process.c b/kernel/power/process.c
+index 372de061..fce97c0e 100644
+--- a/kernel/power/process.c
++++ b/kernel/power/process.c
+@@ -183,6 +183,25 @@ int freeze_kernel_threads(void)
+ 	return error;
+ }
+ 
++//huruihuan add for speed up resume
++void thaw_fingerprintd(void)
++{
++    struct task_struct *g, *p;
++    struct task_struct *curr = current;
++    pm_freezing = false;
++    pm_nosig_freezing = false;
++    read_lock(&tasklist_lock);
++    for_each_process_thread(g, p) {
++    /* No other threads should have PF_SUSPEND_TASK set */
++        WARN_ON((p != curr) && (p->flags & PF_SUSPEND_TASK));
++        if(!memcmp(p->comm, "fps_work", 9))
++            __thaw_task(p);
++    }
++    read_unlock(&tasklist_lock);
++    pm_freezing = true;
++    pm_nosig_freezing = true;
++}
++
+ void thaw_processes(void)
+ {
+ 	struct task_struct *g, *p;
+diff --git a/net/wireless/db.txt b/net/wireless/db.txt
+index 67a6baa2..7ed77f57 100644
+--- a/net/wireless/db.txt
++++ b/net/wireless/db.txt
+@@ -644,8 +644,14 @@ country KY: DFS-FCC
+ 	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country KZ:
++# Source:
++# http://mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_chastot_no34.pdf
++# http://adilet.zan.kz/rus/docs/P000001379_
++country KZ: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
++	(5150 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
++	(5470 - 5725 @ 80), (20), NO-OUTDOOR, DFS
+ 
+ country LB: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
