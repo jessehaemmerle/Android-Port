@@ -6,7 +6,10 @@ Jeder Eintrag wird gegen das Manifest geprueft: Pfade, die es nicht (mehr)
 gibt, brechen das Skript ab, damit die Liste bei einem Branch-Wechsel nicht
 still veraltet.
 
-Aufruf:  scripts/gen_strip_manifest.py [lineage-branch]   (Default: lineage-24.0)
+Aufruf:  scripts/gen_strip_manifest.py [lineage-branch] [--strict]   (Default: lineage-23.0)
+
+Die Listen gelten fuer mehrere Branches; Muster ohne Treffer sind daher nur eine
+Warnung. Mit --strict (z.B. in CI) werden sie zum Fehler.
 """
 import re
 import sys
@@ -14,7 +17,9 @@ import urllib.request
 from fnmatch import fnmatch
 from pathlib import Path
 
-BRANCH = sys.argv[1] if len(sys.argv) > 1 else "lineage-24.0"
+ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
+STRICT = "--strict" in sys.argv
+BRANCH = ARGS[0] if ARGS else "lineage-23.0"
 RAW = f"https://raw.githubusercontent.com/LineageOS/android/{BRANCH}/"
 OUT = Path(__file__).resolve().parent.parent / "manifests"
 
@@ -43,7 +48,8 @@ CORE = [
     "hardware/nxp/uwb", "hardware/nxp/keymint", "hardware/nxp/weaver",
     "hardware/nxp/nxp_mcu_loader", "hardware/nxp/secure_element",
     "hardware/knowles/*", "hardware/google/pixel", "hardware/google/pixel-sepolicy",
-    "hardware/qcom-caf/sm*", "hardware/qcom-caf/sdm660/*", "hardware/qcom-caf/msm8953/*",
+    "hardware/qcom-caf/sm*", "hardware/qcom-caf/sdm*", "hardware/qcom-caf/msm8953/*",
+    "hardware/qcom-caf/msm8998/*",
     "vendor/qcom/opensource/commonsys/wfd",
     "device/qcom/sepolicy_vndr/sm*",
     # Test-, Entwickler- und Infrastruktur-Tools (nicht Teil des Images)
@@ -125,8 +131,13 @@ def main():
     for label, pats in (("strip-core", CORE), ("strip-apps", APPS)):
         hit, miss = expand(pats)
         if miss:
-            problems = True
-            print(f"[{label}] KEIN TREFFER im Manifest {BRANCH}: {miss}", file=sys.stderr)
+            problems = problems or STRICT
+            print(f"[{label}] kein Treffer in {BRANCH} (ok, wenn der Branch das Projekt nicht hat): {miss}", file=sys.stderr)
+        keep = [p for p in hit if p.startswith(("hardware/qcom-caf/msm8996", "hardware/qcom-caf/common",
+                "hardware/qcom-caf/bt", "packages/apps/Settings", "packages/apps/Dialer",
+                "packages/apps/Launcher3", "vendor/lineage", "lineage-sdk", "device/lineage/sepolicy"))]
+        if keep:
+            sys.exit(f"[{label}] Strip-Liste trifft Projekte, die bleiben muessen: {keep}")
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
             f"<!-- AUTOMATISCH ERZEUGT von scripts/gen_strip_manifest.py ({BRANCH}). Nicht von Hand aendern. -->",

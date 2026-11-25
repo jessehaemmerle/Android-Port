@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Holt LineageOS lineage-24.0 (AOSP android-17.0.0_r1), entschlackt den Baum und
+# Holt LineageOS lineage-23.0 (AOSP android-16.0.0_r1), entschlackt den Baum und
 # legt den OnePlus-3-Device-Tree hinein.
 #   scripts/sync.sh [ZIELVERZEICHNIS]      (Default: ~/lineage)
 # Umgebung:  STRIP=core|apps|none   (Default: apps = core + optionale Apps)
@@ -8,7 +8,7 @@ set -euo pipefail
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
 ROOT="${1:-$HOME/lineage}"
 STRIP="${STRIP:-apps}"
-BRANCH=lineage-24.0
+BRANCH=lineage-23.0
 
 free_gb=$(df -BG --output=avail "$(dirname "$ROOT")" | tail -1 | tr -dc 0-9)
 ram_gb=$(free -g | awk '/^Mem:/{print $2}')
