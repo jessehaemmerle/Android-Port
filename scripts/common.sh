@@ -32,6 +32,18 @@ preflight() {
   if (( mem_gb < 30 )); then
     echo "WARNUNG: nur ${mem_gb} GiB RAM+Swap, der Build will etwa 32 GiB (Swap als Puffer anlegen)." >&2
   fi
+  # repo init fragt die Git-Identitaet ab und bricht ohne sie mit einem Python-Traceback ab
+  if command -v git >/dev/null && { [ -z "$(git config --get user.name)" ] || [ -z "$(git config --get user.email)" ]; }; then
+    cat >&2 <<'MSG'
+FEHLT: Git-Identitaet. 'repo init' braucht Name und E-Mail (nur lokal fuer Git, es wird nichts gesendet).
+Einmalig mit DEINEN Angaben setzen:
+
+    git config --global user.name  "Dein Name"
+    git config --global user.email "du@example.com"
+
+MSG
+    return 1
+  fi
   for t in repo git git-lfs rsync python3 curl; do
     command -v "$t" >/dev/null || missing+=("$t")
   done

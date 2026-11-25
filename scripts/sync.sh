@@ -17,7 +17,8 @@ preflight "$ROOT" || exit 1
 [ "${CHECK_ONLY:-0}" = 1 ] && { echo "Pruefung beendet (CHECK_ONLY=1)."; exit 0; }
 
 mkdir -p "$ROOT" && cd "$ROOT"
-[ -d .repo ] || repo init -u https://github.com/LineageOS/android.git -b "$BRANCH" \
+# .repo/manifest.xml gibt es erst nach einem vollstaendigen "repo init"; ein abgebrochener Versuch hinterlaesst nur .repo/
+[ -f .repo/manifest.xml ] || repo init -u https://github.com/LineageOS/android.git -b "$BRANCH" \
     --git-lfs --depth=1 --no-clone-bundle
 
 mkdir -p .repo/local_manifests
